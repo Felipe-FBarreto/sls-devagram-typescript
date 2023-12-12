@@ -1,16 +1,83 @@
 
 service: sls-devagram-typescript
 
+custom:
+  userPoolId: 'us-east-1_Lja3wUyz4'
+  userPoolClientId: '4q37t18t85srocltaru383eu82'
+
+
 frameworkVersion: "3"
 
 provider:
   name: aws
   runtime: nodejs18.x
-  
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-1'}
+  enviroment:
+    USER_POOL_ID: ${self:custom.userPoolId}
+    USER_POOL_CLIENT_ID: ${self:custom.userPoolClientId}
 
 plugins:
   - serverless-plugin-typescript
 
 functions:
-  hello:
-    handler: handler.hello
+  singup:
+    handler: src/functions/auth.register
+    events:
+      - http: 
+         path: register
+         method: post
+         cors: true
+
+resources:
+  Resources:
+    CognitoUserPool:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UserPoolName: ${self:service}-${self:provider.stage}-user-pool
+        AdminCreateUserConfig:
+           AllowAdminCreateUserOnly: false
+        UsernameAttributes:
+          - email
+        AutoVerifiedAttributes:
+          - email
+        EmailVerificationMessage: 'Seu código de verificação para o cadastro devagram é: {####}'
+        EmailVerificationSubject: 'Código de verificação devragram'
+        Policies:
+          PasswordPolicy:
+            MinimumLength: 8
+            RequireLowercase: true
+            RequireNumbers: true
+            RequireSymbols: true
+            RequireUppercase: true
+    CognitoUserClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        ClientName: ${self:service}-${self:provider.stage}-user-pool-client
+        UserPoolId: !Ref CognitoUserPool
+        AllowedOAuthFlows:
+         - implicit
+        AllowedOAuthFlowsUserPoolClient: true
+        AllowedOAuthScopes:
+          - email
+          - openid
+        CallbackURLs:
+          - https://www.google.com
+        LogoutURLs:
+          - https://www.google.com
+        ExplicitAuthFlows:
+          - ALLOW_CUSTOM_AUTH
+          - ALLOW_USER_SRP_AUTH
+          - ALLOW_REFRESH_TOKEN_AUTH
+        SupportedIdentityProviders: 
+          - COGNITO
+        ReadAttributes:
+          - email
+        WriteAttributes:
+          - email
+    CognitoUserPoolDomain:
+      Type: AWS::Cognito::UserPoolDomain
+      Properties:
+        UserPoolId: !Ref CognitoUserPool
+        Domain: ${self:service}-${self:provider.stage}-user-pool-domain-barreto-dev
+    
