@@ -4,7 +4,7 @@ service: sls-devagram-typescript
 custom:
   userPoolId: 'us-east-1_Lja3wUyz4'
   userPoolClientId: '4q37t18t85srocltaru383eu82'
-
+  userTableName: users-table-${self:provider.stage}
 
 frameworkVersion: "3"
 
@@ -13,9 +13,18 @@ provider:
   runtime: nodejs18.x
   stage: ${opt:stage, 'dev'}
   region: ${opt:region, 'us-east-1'}
-  enviroment:
+  environment:
     USER_POOL_ID: ${self:custom.userPoolId}
     USER_POOL_CLIENT_ID: ${self:custom.userPoolClientId}
+    USER_TABLE: ${self:custom.userTableName}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action: 
+            - dynamodb:*
+          Resource:
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/{self:custom.userTableName}"
 
 plugins:
   - serverless-plugin-typescript
@@ -28,6 +37,13 @@ functions:
          path: register
          method: post
          cors: true
+  confirmEmail:
+    handler: src/functions/auth.confirmEmail
+    events:
+      - http:
+          path: confirmEmail
+          method: post
+          cors: true
 
 resources:
   Resources:
