@@ -24,7 +24,7 @@ provider:
           Action: 
             - dynamodb:*
           Resource:
-            - "arn:aws:dynamodb:${self:provider.region}:*:table/{self:custom.userTableName}"
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.userTableName}"
 
 plugins:
   - serverless-plugin-typescript
