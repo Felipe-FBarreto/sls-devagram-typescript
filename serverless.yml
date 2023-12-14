@@ -5,6 +5,9 @@ custom:
   userPoolId: 'us-east-1_Lja3wUyz4'
   userPoolClientId: '4q37t18t85srocltaru383eu82'
   userTableName: users-table-${self:provider.stage}
+  apigwBinary:
+    types:
+      - 'multipart/form-data'
 
 frameworkVersion: "3"
 
@@ -28,6 +31,7 @@ provider:
 
 plugins:
   - serverless-plugin-typescript
+  - serverless-apigw-binary
 
 functions:
   singup:

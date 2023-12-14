@@ -9,6 +9,7 @@ import {
 import type { Handler, APIGatewayEvent } from "aws-lambda";
 import { User } from "../types/models/User";
 import { UserModel } from "../models/UserModels";
+import { parse } from "aws-multipart-parser";
 
 export const register: Handler = async (
   event: APIGatewayEvent,
@@ -30,29 +31,32 @@ export const register: Handler = async (
         "Parametros necessários não informados",
       );
     }
-    const request = JSON.parse(event.body);
-    const { email, name, password } = request as UserResgisterRequest;
+    const formData = parse(event, true);
+    console.log("🚀 ~ file: auth.ts:35 ~ formData:", formData);
 
-    if (!email || !email.match(emailRegex)) {
-      return formatDefaultResponse(401, "Email inváido");
-    }
-    if (!password || !password.match(passwordRegex)) {
-      return formatDefaultResponse(401, "Senha inváido");
-    }
-    if (!name || name.trim().length < 2) {
-      return formatDefaultResponse(401, "Nome inváido");
-    }
-    const cognitoUser = await new CognitoServices(
-      USER_POOL_ID,
-      USER_POOL_CLIENT_ID,
-    ).singUp(email, password);
+    // const request = JSON.parse(event.body);
+    // const { email, name, password } = request as UserResgisterRequest;
 
-    const user: User = {
-      name,
-      email,
-      cognitoId: cognitoUser.userSub,
-    };
-    await UserModel.create(user);
+    // if (!email || !email.match(emailRegex)) {
+    //   return formatDefaultResponse(401, "Email inváido");
+    // }
+    // if (!password || !password.match(passwordRegex)) {
+    //   return formatDefaultResponse(401, "Senha inváido");
+    // }
+    // if (!name || name.trim().length < 2) {
+    //   return formatDefaultResponse(401, "Nome inváido");
+    // }
+    // const cognitoUser = await new CognitoServices(
+    //   USER_POOL_ID,
+    //   USER_POOL_CLIENT_ID,
+    // ).singUp(email, password);
+
+    // const user: User = {
+    //   name,
+    //   email,
+    //   cognitoId: cognitoUser.userSub,
+    // };
+    // await UserModel.create(user);
     return formatDefaultResponse(200, "Usuário cadastrado com sucesso");
   } catch (e) {
     return formatDefaultResponse(500, "Erro ao cadastrar usuário:" + e);
