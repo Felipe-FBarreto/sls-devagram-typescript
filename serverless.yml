@@ -5,6 +5,7 @@ custom:
   userPoolId: 'us-east-1_Lja3wUyz4'
   userPoolClientId: '4q37t18t85srocltaru383eu82'
   userTableName: users-table-${self:provider.stage}
+  avatarBucket: ${self:service}-${self:provider.stage}-avatars-devagram-user
   apigwBinary:
     types:
       - 'multipart/form-data'
@@ -20,6 +21,7 @@ provider:
     USER_POOL_ID: ${self:custom.userPoolId}
     USER_POOL_CLIENT_ID: ${self:custom.userPoolClientId}
     USER_TABLE: ${self:custom.userTableName}
+    AVATAR_BUCKET: ${self:custom.avatarBucket}
   iam:
     role:
       statements:
@@ -100,4 +102,27 @@ resources:
       Properties:
         UserPoolId: !Ref CognitoUserPool
         Domain: ${self:service}-${self:provider.stage}-user-pool-domain-barreto-dev
-    
+    AvatarsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.avatarBucket}
+        AccessControl: Private
+    AvatarsBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref AvatarsBucket
+        PolicyDocument:
+          Statement:
+            - Action:
+                - 's3:GetObject'
+                - 's3:PutObject'
+                - 's3:DeleteObject'
+              Effect: Allow
+              Resource: !Join
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref AvatarsBucket
+                  - "/*"
+              Principal: '*'
+              
+

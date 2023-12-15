@@ -16,9 +16,11 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
+    "@types/uuid": "^9.0.7",
     "amazon-cognito-identity-js": "^6.3.7",
     "aws-multipart-parser": "^0.2.1",
     "dynamoose": "^2.8.6",
-    "serverless-apigw-binary": "^0.4.4"
+    "serverless-apigw-binary": "^0.4.4",
+    "uuid": "^9.0.1"
   }
 }
