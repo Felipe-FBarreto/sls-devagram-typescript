@@ -55,4 +55,54 @@ export class CognitoServices {
       }
     });
   };
+
+  public forgotPassword = (email: string): Promise<string> => {
+    return new Promise<any>((resolve, reject) => {
+      try {
+        const userPool = new CognitoUserPool(this.poolData);
+
+        const userData: ICognitoUserData = {
+          Username: email,
+          Pool: userPool,
+        };
+        const user = new CognitoUser(userData);
+        user.forgotPassword({
+          onSuccess(data) {
+            resolve(data);
+          },
+          onFailure(err) {
+            reject(err);
+          },
+        });
+      } catch (err) {
+        reject(err);
+      }
+    });
+  };
+  public confirmPassword = (
+    code: string,
+    email: string,
+    newPassword: string,
+  ): Promise<any> => {
+    return new Promise<any>((resolve, reject) => {
+      try {
+        const userPool = new CognitoUserPool(this.poolData);
+        const userData: ICognitoUserData = {
+          Username: email,
+          Pool: userPool,
+        };
+        const user = new CognitoUser(userData);
+        user.confirmPassword(code, newPassword, {
+          onSuccess(data) {
+            resolve(data);
+          },
+          onFailure(err) {
+            reject(err);
+          },
+        });
+      } catch (err) {
+        reject(err);
+      }
+    });
+  };
 }
