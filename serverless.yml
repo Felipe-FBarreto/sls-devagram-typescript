@@ -64,6 +64,13 @@ functions:
           path: changePassword
           method: put
           cors: true
+  login:
+    handler: src/functions/login.login
+    events:
+      - http:
+          path: login
+          method: post
+          cors: true
 
 resources:
   Resources:

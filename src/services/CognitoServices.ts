@@ -3,6 +3,8 @@ import {
   CognitoUser,
   ICognitoUserPoolData,
   ICognitoUserData,
+  AuthenticationDetails,
+  IAuthenticationDetailsData,
 } from "amazon-cognito-identity-js";
 
 export class CognitoServices {
@@ -98,6 +100,41 @@ export class CognitoServices {
           },
           onFailure(err) {
             reject(err);
+          },
+        });
+      } catch (err) {
+        reject(err);
+      }
+    });
+  };
+  public login = (login: string, password: string): Promise<any> => {
+    return new Promise<any>((resolve, reject) => {
+      try {
+        const userPool = new CognitoUserPool(this.poolData);
+        const userData: ICognitoUserData = {
+          Username: login,
+          Pool: userPool,
+        };
+        const authenticationDate: IAuthenticationDetailsData = {
+          Username: login,
+          Password: password,
+        };
+        const authenticationDetails = new AuthenticationDetails(
+          authenticationDate,
+        );
+        const user = new CognitoUser(userData);
+        user.authenticateUser(authenticationDetails, {
+          onFailure(err) {
+            reject(err);
+          },
+          onSuccess(session) {
+            const accessToken = session.getAccessToken().getJwtToken();
+            const refreshToken = session.getRefreshToken().getToken();
+            resolve({
+              email: login,
+              accessToken,
+              refreshToken,
+            });
           },
         });
       } catch (err) {
