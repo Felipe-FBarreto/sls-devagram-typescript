@@ -1,8 +1,6 @@
 import { getUserIdFromEvent } from "./../utils/authenticationHandlerUtils";
 import { Handler, APIGatewayEvent } from "aws-lambda";
-import { emailRegex, passwordRegex } from "../contents/Regexes";
-import { CognitoServices } from "../services/CognitoServices";
-import { ConfirmPassword } from "../types/auth/confirmPassword";
+
 import {
   DefaultJsonMessage,
   formatDefaultResponse,
