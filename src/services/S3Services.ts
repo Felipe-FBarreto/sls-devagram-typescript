@@ -22,12 +22,30 @@ export class S3Service {
           Key: key,
           Body: file.filename,
         };
-
         S3.upload(config, (err, res) => {
           if (err) {
             reject(err);
           }
           resolve(key);
+        });
+      } catch (err) {
+        reject(err);
+      }
+    });
+  };
+
+  public getImageUrl = (
+    bucket: string,
+    key: string,
+  ): Promise<string | Error> => {
+    return new Promise((resolve, reject) => {
+      try {
+        const params = { Bucket: bucket, Key: key };
+        S3.getSignedUrl("getObject", params, (err, result) => {
+          if (err) {
+            reject(err);
+          }
+          resolve(result);
         });
       } catch (err) {
         reject(err);

@@ -5,7 +5,6 @@ import {
   imageAllowedExtensions,
   passwordRegex,
 } from "../contents/Regexes";
-import { UserResgisterRequest } from "../types/auth/UserResgisterRequest";
 import {
   DefaultJsonMessage,
   formatDefaultResponse,
@@ -14,7 +13,6 @@ import type { Handler, APIGatewayEvent } from "aws-lambda";
 import { User } from "../types/models/User";
 import { UserModel } from "../models/UserModels";
 import { parse } from "aws-multipart-parser";
-import { FileData } from "aws-multipart-parser/dist/models";
 import { S3Service } from "../services/S3Services";
 import { EventBodyRegister } from "../types/auth/EventBodyRegister";
 import { ConfirmPassword } from "../types/auth/confirmPassword";
@@ -66,6 +64,7 @@ export const register: Handler = async (
       USER_POOL_ID,
       USER_POOL_CLIENT_ID,
     ).singUp(email, password);
+
     let key = undefined;
     if (file) {
       key = await new S3Service().saveImageS3(AVATAR_BUCKET, "avatar", file);
