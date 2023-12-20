@@ -132,7 +132,7 @@ export class CognitoServices {
             const refreshToken = session.getRefreshToken().getToken();
             resolve({
               email: login,
-              accessToken,
+              token: accessToken,
               refreshToken,
             });
           },
