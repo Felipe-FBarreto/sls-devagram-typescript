@@ -10,19 +10,16 @@ import { S3Service } from "../services/S3Services";
 import { parse } from "aws-multipart-parser";
 import { FileData } from "aws-multipart-parser/dist/models";
 import { imageAllowedExtensions } from "../contents/Regexes";
+import { validateEvns } from "../utils/validadeEnvs";
 
 export const me: Handler = async (
   event: APIGatewayEvent,
 ): Promise<DefaultJsonMessage> => {
   try {
-    const { USER_TABLE, AVATAR_BUCKET } = process.env;
-    if (!USER_TABLE || !AVATAR_BUCKET) {
-      return formatDefaultResponse(
-        500,
-        "Environments para dynamo e s3 não encontradas",
-      );
+    const { AVATAR_BUCKET, error } = validateEvns(["AVATAR_BUCKET"]);
+    if (error) {
+      return formatDefaultResponse(500, error);
     }
-
     const userId = getUserIdFromEvent(event);
     if (!userId) {
       return formatDefaultResponse(400, "Usuário não encontrado");

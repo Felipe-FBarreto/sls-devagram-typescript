@@ -6,14 +6,19 @@ import {
 import { LoginResponse } from "../types/LoginResponse";
 import { emailRegex, passwordRegex } from "../contents/Regexes";
 import { CognitoServices } from "../services/CognitoServices";
+import { validateEvns } from "../utils/validadeEnvs";
 export const login: Handler = async (
   event: APIGatewayEvent,
 ): Promise<DefaultJsonMessage> => {
   try {
-    const { USER_POOL_ID, USER_POOL_CLIENT_ID } = process.env;
-    if (!USER_POOL_ID || !USER_POOL_CLIENT_ID) {
-      return formatDefaultResponse(500, "Coginot Environment não encontrada");
+    const { USER_POOL_ID, USER_POOL_CLIENT_ID, error } = validateEvns([
+      "USER_POOL_ID",
+      "USER_POOL_CLIENT_ID",
+    ]);
+    if (error) {
+      return formatDefaultResponse(500, error);
     }
+
     if (!event.body) {
       return formatDefaultResponse(
         400,
