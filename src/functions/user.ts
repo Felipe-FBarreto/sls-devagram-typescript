@@ -44,8 +44,8 @@ export const updateUser: Handler = async (
   event: APIGatewayEvent,
 ): Promise<DefaultJsonMessage> => {
   try {
-    const { USER_TABLE, AVATAR_BUCKET } = process.env;
-    if (!USER_TABLE || !AVATAR_BUCKET) {
+    const { AVATAR_BUCKET, error } = validateEvns(["AVATAR_BUCKET"]);
+    if (error) {
       return formatDefaultResponse(
         500,
         "Environment de table ou bucket não encontradas",
@@ -85,7 +85,7 @@ export const updateUser: Handler = async (
       user.avatar = newKey;
     }
     await UserModel.update(user);
-    return formatDefaultResponse(200, "Update realizado com sucesso");
+    return formatDefaultResponse(200, "Atualização realizado com sucesso");
   } catch (e) {
     return formatDefaultResponse(
       500,

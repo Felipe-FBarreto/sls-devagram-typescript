@@ -2,10 +2,12 @@
 service: sls-devagram-typescript
 
 custom:
-  userPoolId: 'us-east-1_Lja3wUyz4'
-  userPoolClientId: '4q37t18t85srocltaru383eu82'
+  userPoolId: 'us-east-1_Avs7FnsVQ'
+  userPoolClientId: '7h0fdt5bdgic5oijns5eochg3p'
   userTableName: users-table-${self:provider.stage}
   avatarBucket: ${self:service}-${self:provider.stage}-avatars-devagram-user
+  postTableName: posts-table-${self:provider.stage}
+  postBucket: ${self:service}-${self:provider.stage}-post-devagram-nullapp
   apigwBinary:
     types:
       - 'multipart/form-data'
@@ -22,14 +24,18 @@ provider:
     USER_POOL_CLIENT_ID: ${self:custom.userPoolClientId}
     USER_TABLE: ${self:custom.userTableName}
     AVATAR_BUCKET: ${self:custom.avatarBucket}
+    POST_TABLE: ${self:custom.postTableName}
+    POST_BUCKET: ${self:custom.postBucket}
   iam:
     role:
       statements:
         - Effect: Allow
-          Action: 
+          Action:
             - dynamodb:*
+            - s3:PutBucketPolicy
           Resource:
             - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.userTableName}"
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:custom.postTableName}"
   httpApi:
     authorizers:
       serviceAuthorizer:
@@ -90,12 +96,28 @@ functions:
       - httpApi:
           path: /me
           method: get
-          authorizer: serviceAuthorizer
+          authorizer: serviceAuthorizer   
+              
   updateUser:
     handler: src/functions/user.updateUser
     events:
       - httpApi:
           path: /updateUser
+          method: put
+          authorizer: serviceAuthorizer
+
+  post:
+    handler: src/functions/post.post
+    events:
+      - httpApi:
+          path: /post
+          method: post
+          authorizer: serviceAuthorizer
+  toggleLike:
+    handler: src/functions/post.toggleLike
+    events:
+      - httpApi:
+          path: /like/{postId}
           method: put
           authorizer: serviceAuthorizer
 
@@ -170,7 +192,31 @@ resources:
                 - ''
                 - - 'arn:aws:s3:::'
                   - !Ref AvatarsBucket
-                  - "/*"
+                  - /*
+              Principal: '*'
+              
+
+    PostBucketDevagram:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.postBucket}
+        AccessControl: Private
+    PostBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref PostBucketDevagram
+        PolicyDocument:
+          Statement:
+            - Action:
+                - 's3:GetObject'
+                - 's3:PutObject'
+                - 's3:DeleteObject'
+              Effect: Allow
+              Resource: !Join
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref PostBucketDevagram
+                  - /*
               Principal: '*'
               
 
