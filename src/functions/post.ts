@@ -18,6 +18,10 @@ type EventUpdatePostResponse = {
   description?: string;
   file?: FileData;
 };
+
+type ICommentBody = {
+  comment: string;
+};
 export const post: Handler = async (
   event: APIGatewayEvent,
 ): Promise<DefaultJsonMessage> => {
@@ -113,6 +117,83 @@ export const toggleLike: Handler = async (
       await PostModel.update(post);
       return formatDefaultResponse(200, "Like realizado com sucesso");
     }
+  } catch (e) {
+    return formatDefaultResponse(500, "Não foi possível realizar like");
+  }
+};
+
+export const comments: Handler = async (
+  event: any,
+): Promise<DefaultJsonMessage> => {
+  try {
+    const { error } = validateEvns(["POST_BUCKET"]);
+    if (error) {
+      return formatDefaultResponse(
+        500,
+        "Environment de table ou bucket não encontradas",
+      );
+    }
+
+    const userId = getUserIdFromEvent(event);
+
+    if (!userId) {
+      return formatDefaultResponse(400, "Usuário não encontrado ");
+    }
+    const { postId } = event.pathParameters;
+    if (!postId) {
+      return formatDefaultResponse(400, "Parâmetros de entrada não informados");
+    }
+    const post = await PostModel.get({ id: postId });
+    if (!post) {
+      return formatDefaultResponse(400, "Publicação não encontrada");
+    }
+    const request = JSON.parse(event.body);
+    const { comment } = request as ICommentBody;
+
+    if (!comment || comment.length < 2) {
+      return formatDefaultResponse(400, "Comentário inválido");
+    }
+    const currentDate = new Date();
+    const comments = {
+      userId,
+      comment,
+      date: currentDate.toString(),
+    };
+    post.comments.push(comments);
+    await PostModel.update(post);
+    return formatDefaultResponse(200, "Comentário realizado com sucesso");
+  } catch (e) {
+    return formatDefaultResponse(500, "Não foi possível realizar like");
+  }
+};
+
+export const get: Handler = async (event: any): Promise<DefaultJsonMessage> => {
+  try {
+    const { error, POST_BUCKET } = validateEvns(["POST_BUCKET", "POST_TABLE"]);
+    if (error) {
+      return formatDefaultResponse(
+        500,
+        "Environment de table ou bucket não encontradas",
+      );
+    }
+
+    const userId = getUserIdFromEvent(event);
+
+    if (!userId) {
+      return formatDefaultResponse(400, "Usuário não encontrado ");
+    }
+    const { postId } = event.pathParameters;
+    if (!postId) {
+      return formatDefaultResponse(400, "Parâmetros de entrada não informados");
+    }
+    const post = await PostModel.get({ id: postId });
+    if (!post) {
+      return formatDefaultResponse(400, "Publicação não encontrada");
+    }
+
+    post.image = await new S3Service().getImageUrl(POST_BUCKET, post.image);
+
+    return formatDefaultResponse(200, undefined, post);
   } catch (e) {
     return formatDefaultResponse(500, "Não foi possível realizar like");
   }

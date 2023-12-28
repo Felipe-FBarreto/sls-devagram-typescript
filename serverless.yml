@@ -120,6 +120,20 @@ functions:
           path: /like/{postId}
           method: put
           authorizer: serviceAuthorizer
+  comments:
+    handler: src/functions/post.comments
+    events:
+      - httpApi:
+          path: /comment/{postId}
+          method: post
+          authorizer: serviceAuthorizer
+  get:
+    handler: src/functions/post.get
+    events:
+      - httpApi:
+          path: /post/{postId}
+          method: get
+          authorizer: serviceAuthorizer
 
 resources:
   Resources:
