@@ -11,6 +11,7 @@ import { parse } from "aws-multipart-parser";
 import { FileData } from "aws-multipart-parser/dist/models";
 import { imageAllowedExtensions } from "../contents/Regexes";
 import { validateEvns } from "../utils/validadeEnvs";
+import { DefaultListPaginated } from "../types/DefaultListPaginated";
 
 export const me: Handler = async (
   event: APIGatewayEvent,
@@ -123,7 +124,59 @@ export const getUserById: Handler = async (
 
     return formatDefaultResponse(200, undefined, user);
   } catch (e) {
-    console.log("🚀 ~ file: user.ts:126 ~ e:", e);
     return formatDefaultResponse(500, "Erro buscar usuário por id:" + e);
+  }
+};
+
+export const searchUser: Handler = async (
+  event: any,
+): Promise<DefaultJsonMessage> => {
+  try {
+    const { AVATAR_BUCKET, error } = validateEvns([
+      "AVATAR_BUCKET",
+      "USER_TABLE",
+    ]);
+    if (error) {
+      return formatDefaultResponse(500, error);
+    }
+    const { filter } = event.pathParameters;
+
+    if (!filter || filter.length < 2) {
+      return formatDefaultResponse(400, "Filtro inválido");
+    }
+
+    const { lastKey } = event.queryStringParameters || "";
+
+    const query = UserModel.scan()
+      .where("name")
+      .contains(filter)
+      .or()
+      .where("email")
+      .contains(filter);
+
+    if (lastKey) {
+      query.startAt({ cognitoId: lastKey });
+    }
+    const result = await query.limit(2).exec();
+
+    const response = {} as DefaultListPaginated;
+
+    if (result) {
+      response.lastyKey = result.lastyKey;
+      response.count = result.count;
+
+      for (const document of result) {
+        if (document && document.avatar) {
+          document.avatar = await new S3Service().getImageUrl(
+            AVATAR_BUCKET,
+            document.avatar,
+          );
+        }
+      }
+      response.data = result;
+    }
+    return formatDefaultResponse(200, undefined, response);
+  } catch (e) {
+    return formatDefaultResponse(500, "Erro buscar usuário:" + e);
   }
 };
