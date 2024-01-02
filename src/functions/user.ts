@@ -93,3 +93,37 @@ export const updateUser: Handler = async (
     );
   }
 };
+
+export const getUserById: Handler = async (
+  event: any,
+): Promise<DefaultJsonMessage> => {
+  try {
+    const { AVATAR_BUCKET, error } = validateEvns([
+      "AVATAR_BUCKET",
+      "USER_TABLE",
+    ]);
+    if (error) {
+      return formatDefaultResponse(500, error);
+    }
+    const { userId } = event.pathParameters;
+
+    if (!userId) {
+      return formatDefaultResponse(400, "Usuário existe");
+    }
+    const user = await UserModel.get({ cognitoId: userId });
+
+    if (!user) {
+      return formatDefaultResponse(400, "Usuário existe");
+    }
+
+    if (user && user.avatar) {
+      const url = await new S3Service().getImageUrl(AVATAR_BUCKET, user.avatar);
+      user.avatar = url;
+    }
+
+    return formatDefaultResponse(200, undefined, user);
+  } catch (e) {
+    console.log("🚀 ~ file: user.ts:126 ~ e:", e);
+    return formatDefaultResponse(500, "Erro buscar usuário por id:" + e);
+  }
+};
