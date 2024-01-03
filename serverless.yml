@@ -148,6 +148,13 @@ functions:
           path: /user/search/{filter}
           method: get
           authorizer: serviceAuthorizer
+  follow:
+    handler: src/functions/follow.follow
+    events: 
+      - httpApi:
+          path: /follow/{userId}
+          method: post
+          authorizer: serviceAuthorizer
 
 resources:
   Resources:

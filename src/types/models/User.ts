@@ -4,6 +4,6 @@ export type User = {
   cognitoId: string;
   avatar?: string;
   followers?: number;
-  following?: number;
+  following?: Array<string>;
   post?: Array<string>;
 };

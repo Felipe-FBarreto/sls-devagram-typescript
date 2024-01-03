@@ -109,12 +109,12 @@ export const getUserById: Handler = async (
     const { userId } = event.pathParameters;
 
     if (!userId) {
-      return formatDefaultResponse(400, "Usuário existe");
+      return formatDefaultResponse(400, "Paramentro na url necessário");
     }
     const user = await UserModel.get({ cognitoId: userId });
 
     if (!user) {
-      return formatDefaultResponse(400, "Usuário existe");
+      return formatDefaultResponse(400, "Usuário não encontrado");
     }
 
     if (user && user.avatar) {
