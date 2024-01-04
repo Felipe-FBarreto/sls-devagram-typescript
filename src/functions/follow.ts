@@ -27,7 +27,6 @@ export const follow: Handler = async (
     }
 
     const userFollower = await UserModel.get({ cognitoId: userFollowerId });
-    console.log("🚀 ~ file: follow.ts:30 ~ userFollower:", userFollower);
 
     const user = await UserModel.get({ cognitoId: userId });
 
