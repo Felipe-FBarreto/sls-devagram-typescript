@@ -31,7 +31,7 @@ export const findByUserId: Handler = async (
       return formatDefaultResponse(400, "Usuário não encontrado");
     }
 
-    const user = UserModel.get({ cognitoId: userId });
+    const user = await UserModel.get({ cognitoId: userId });
 
     if (!user) {
       return formatDefaultResponse(400, "Usuário não encontrado");
@@ -44,7 +44,65 @@ export const findByUserId: Handler = async (
     if (lastKey) {
       query.startAt(lastKey);
     }
-    const result = await query.limit(1).exec();
+    const result = await query.limit(20).exec();
+
+    const response = {} as DefaultListPaginated;
+
+    if (result) {
+      response.count = result.count;
+      response.lastyKey = result.lastKey;
+
+      for (const post of result) {
+        if (post && post.image) {
+          post.image = await new S3Service().getImageUrl(
+            POST_BUCKET,
+            post.image,
+          );
+        }
+        response.data = result;
+      }
+    }
+    return formatDefaultResponse(200, undefined, response);
+  } catch (e) {
+    console.log("Error: " + e);
+    return formatDefaultResponse(500, "Erro buscar publicação:" + e);
+  }
+};
+
+export const feedHome: Handler = async (
+  event: any,
+): Promise<DefaultJsonMessage> => {
+  try {
+    const { error, POST_BUCKET } = validateEvns([
+      "USER_TABLE",
+      "POST_TABLE",
+      "POST_BUCKET",
+    ]);
+    if (error) {
+      return formatDefaultResponse(500, error);
+    }
+    const userId = getUserIdFromEvent(event);
+
+    if (!userId) {
+      return formatDefaultResponse(400, "Usuário não encontrado");
+    }
+
+    const user = await UserModel.get({ cognitoId: userId });
+
+    if (!user) {
+      return formatDefaultResponse(400, "Usuário não encontrado");
+    }
+
+    const usersToFeed = user.following;
+    usersToFeed.push(userId);
+    const query = PostModel.scan("userId").in(usersToFeed);
+
+    const lastKey = event.queryStringParameters || "";
+
+    if (lastKey) {
+      query.startAt({ id: lastKey });
+    }
+    const result = await query.limit(20).exec();
 
     const response = {} as DefaultListPaginated;
 
